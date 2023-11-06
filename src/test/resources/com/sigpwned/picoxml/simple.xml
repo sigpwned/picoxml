@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?foobar This is a processing instruction. ?>
+<greeting alpha="bravo" test="1 &lt; 2">
+    <hello>world</hello>
+    <!-- This is a comment -->
+    <entities>&lt; &gt; &apos; &quot; &#65; &#x41;</entities>
+    <selfclosed name='value' />
+    <![CDATA[ This is CDATA. ]]>
+    This is chardata.
+</greeting>
