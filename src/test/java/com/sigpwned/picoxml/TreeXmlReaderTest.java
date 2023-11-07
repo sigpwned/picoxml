@@ -41,7 +41,7 @@ import com.sigpwned.picoxml.antlr4.XMLParser;
 import com.sigpwned.picoxml.model.Document;
 import com.sigpwned.picoxml.model.Node;
 
-public class TreeXmlParserTest {
+public class TreeXmlReaderTest {
   @Test
   public void test() throws IOException {
     CharStream s = CharStreams.fromStream(getClass().getResourceAsStream("simple.xml"),

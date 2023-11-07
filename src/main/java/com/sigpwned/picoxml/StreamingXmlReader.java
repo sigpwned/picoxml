@@ -38,60 +38,69 @@ import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.CommonTokenFactory;
 import org.antlr.v4.runtime.TokenStream;
+import org.antlr.v4.runtime.UnbufferedCharStream;
+import org.antlr.v4.runtime.UnbufferedTokenStream;
 import com.sigpwned.picoxml.antlr4.XMLLexer;
 import com.sigpwned.picoxml.antlr4.XMLParser;
-import com.sigpwned.picoxml.model.Document;
-import com.sigpwned.picoxml.util.Mappings;
+import com.sigpwned.picoxml.listener.SimpleXmlParserListener;
 import com.sigpwned.picoxml.util.XmlByteStreams;
 
 /**
- * Reads whole file into memory to build parse tree
+ * Reads as little into memory as possible
  */
-public class TreeXmlReader {
+public class StreamingXmlReader {
   public static XMLParser defaultXMLParser(Reader r) throws IOException {
-    CharStream s = CharStreams.fromReader(r);
+    CharStream s = new UnbufferedCharStream(r);
     XMLLexer lexer = new XMLLexer(s);
-    TokenStream tokens = new CommonTokenStream(lexer);
-    return new XMLParser(tokens);
+    lexer.setTokenFactory(new CommonTokenFactory(true));
+    TokenStream tokens = new UnbufferedTokenStream<>(lexer);
+    XMLParser parser = new XMLParser(tokens);
+    parser.setBuildParseTree(false);
+    return parser;
   }
 
   private final XMLParser parser;
 
-  public TreeXmlReader(File f) throws IOException {
+  public StreamingXmlReader(File f) throws IOException {
     this(f, StandardCharsets.UTF_8);
   }
 
-  public TreeXmlReader(File f, Charset defaultCharset) throws IOException {
+  public StreamingXmlReader(File f, Charset defaultCharset) throws IOException {
     this(new FileInputStream(f), defaultCharset);
   }
 
-  public TreeXmlReader(InputStream in) throws IOException {
+  public StreamingXmlReader(InputStream in) throws IOException {
     this(in, StandardCharsets.UTF_8);
   }
 
-  public TreeXmlReader(InputStream in, Charset defaultCharset) throws IOException {
+  public StreamingXmlReader(InputStream in, Charset defaultCharset) throws IOException {
     this(XmlByteStreams.decode(in, defaultCharset));
   }
 
-  public TreeXmlReader(String s) throws IOException {
+  public StreamingXmlReader(String s) throws IOException {
     this(new StringReader(s));
   }
 
-  public TreeXmlReader(Reader r) throws IOException {
+  public StreamingXmlReader(Reader r) throws IOException {
     this(defaultXMLParser(r));
   }
 
-  protected TreeXmlReader(XMLParser parser) {
+  protected StreamingXmlReader(XMLParser parser) {
     if (parser == null)
       throw new NullPointerException();
     this.parser = parser;
   }
 
-  public Document document() {
-    return Mappings.document(getParser().document());
+  public void document(ContentHandler handler) {
+    SimpleXmlParserListener listener = new SimpleXmlParserListener(handler);
+    getParser().addParseListener(listener);
+    try {
+      getParser().document();
+    } finally {
+      getParser().removeParseListener(listener);
+    }
   }
 
   private XMLParser getParser() {
