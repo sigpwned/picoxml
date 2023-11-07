@@ -44,7 +44,7 @@ import org.antlr.v4.runtime.UnbufferedCharStream;
 import org.antlr.v4.runtime.UnbufferedTokenStream;
 import com.sigpwned.picoxml.antlr4.XMLLexer;
 import com.sigpwned.picoxml.antlr4.XMLParser;
-import com.sigpwned.picoxml.listener.SimpleXmlParserListener;
+import com.sigpwned.picoxml.listener.DefaultXmlParserListener;
 import com.sigpwned.picoxml.util.XmlByteStreams;
 
 /**
@@ -58,6 +58,7 @@ public class StreamingXmlReader {
     TokenStream tokens = new UnbufferedTokenStream<>(lexer);
     XMLParser parser = new XMLParser(tokens);
     parser.setBuildParseTree(false);
+
     return parser;
   }
 
@@ -94,7 +95,7 @@ public class StreamingXmlReader {
   }
 
   public void document(ContentHandler handler) {
-    SimpleXmlParserListener listener = new SimpleXmlParserListener(handler);
+    DefaultXmlParserListener listener = new DefaultXmlParserListener(handler);
     getParser().addParseListener(listener);
     try {
       getParser().document();

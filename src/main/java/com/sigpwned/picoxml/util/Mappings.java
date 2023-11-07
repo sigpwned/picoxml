@@ -104,17 +104,17 @@ public final class Mappings {
   }
 
   public static String elementName(ElementContext c) {
-    return c.Name(0).getText();
+    if (c.openTag() != null)
+      return c.openTag().Name().getText();
+    if (c.openCloseTag() != null)
+      return c.openCloseTag().Name().getText();
+    throw new AssertionError(c);
   }
 
   public static Element element(ElementContext c) {
-    String name = elementName(c);
-    Attributes attributes = attributes(c.attribute());
-
-    if (c.SLASH_CLOSE() != null) {
-      // Self-closing tag
-      return new Element(Nodes.EMPTY, name, attributes);
-    } else {
+    if (c.openTag() != null && c.closeTag() != null) {
+      String name = c.openTag().Name().getText();
+      Attributes attributes = attributes(c.openTag().attribute());
       // Open and closing tag
       // TODO Should we check the name on the close tag?
       List<Map.Entry<Integer, Node>> children = new ArrayList<>();
@@ -146,6 +146,12 @@ public final class Mappings {
 
       return new Element(nodes, name, attributes);
     }
+    if (c.openCloseTag() != null) {
+      String name = c.openCloseTag().Name().getText();
+      Attributes attributes = attributes(c.openCloseTag().attribute());
+      return new Element(Nodes.EMPTY, name, attributes);
+    }
+    throw new AssertionError(c);
   }
 
   public static CData cdata(TerminalNode n) {

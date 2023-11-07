@@ -66,5 +66,7 @@ public class StreamingXmlReaderTest {
         events.add(format("endPrefixMapping(%s)", prefix));
       }
     });
+
+    System.out.println(events);
   }
 }
