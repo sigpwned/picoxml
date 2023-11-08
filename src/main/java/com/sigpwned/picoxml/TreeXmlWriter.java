@@ -47,8 +47,8 @@ import com.sigpwned.picoxml.model.node.ProcessingInstruction;
 import com.sigpwned.picoxml.model.node.Ref;
 import com.sigpwned.picoxml.model.node.Text;
 import com.sigpwned.picoxml.model.node.WhiteSpace;
-import com.sigpwned.picoxml.model.node.reference.CharRef;
-import com.sigpwned.picoxml.model.node.reference.EntityRef;
+import com.sigpwned.picoxml.model.node.ref.CharRef;
+import com.sigpwned.picoxml.model.node.ref.EntityRef;
 import com.sigpwned.picoxml.util.XmlStrings;
 
 public class TreeXmlWriter {

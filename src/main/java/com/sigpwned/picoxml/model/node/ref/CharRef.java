@@ -27,7 +27,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  * ==================================LICENSE_END===================================
  */
-package com.sigpwned.picoxml.model.node.reference;
+package com.sigpwned.picoxml.model.node.ref;
 
 import java.util.Objects;
 import com.sigpwned.picoxml.model.node.Ref;
