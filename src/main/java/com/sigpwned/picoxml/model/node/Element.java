@@ -38,6 +38,7 @@ public class Element extends Node {
   private final String prefix;
   private final String localName;
   private final Attributes attributes;
+  private String namespace;
 
   public Element(Nodes children, String prefix, String localName, Attributes attributes) {
     super(children);
@@ -62,11 +63,19 @@ public class Element extends Node {
     return attributes;
   }
 
+  public String getNamespace() {
+    return namespace;
+  }
+
+  public void setNamespace(String namespace) {
+    this.namespace = namespace;
+  }
+
   @Override
   public int hashCode() {
     final int prime = 31;
     int result = super.hashCode();
-    result = prime * result + Objects.hash(attributes, localName, prefix);
+    result = prime * result + Objects.hash(attributes, localName, namespace, prefix);
     return result;
   }
 
@@ -80,12 +89,13 @@ public class Element extends Node {
       return false;
     Element other = (Element) obj;
     return Objects.equals(attributes, other.attributes)
-        && Objects.equals(localName, other.localName) && Objects.equals(prefix, other.prefix);
+        && Objects.equals(localName, other.localName) && Objects.equals(namespace, other.namespace)
+        && Objects.equals(prefix, other.prefix);
   }
 
   @Override
   public String toString() {
     return "Element [prefix=" + prefix + ", localName=" + localName + ", attributes=" + attributes
-        + "]";
+        + ", namespace=" + namespace + "]";
   }
 }

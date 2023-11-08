@@ -42,7 +42,9 @@ import com.sigpwned.picoxml.ContentHandler;
 import com.sigpwned.picoxml.Name;
 import com.sigpwned.picoxml.antlr4.XMLLexer;
 import com.sigpwned.picoxml.antlr4.XMLParser.CloseTagContext;
+import com.sigpwned.picoxml.antlr4.XMLParser.ContentContext;
 import com.sigpwned.picoxml.antlr4.XMLParser.DocumentContext;
+import com.sigpwned.picoxml.antlr4.XMLParser.ElementContext;
 import com.sigpwned.picoxml.antlr4.XMLParser.OpenCloseTagContext;
 import com.sigpwned.picoxml.antlr4.XMLParser.OpenTagContext;
 import com.sigpwned.picoxml.antlr4.XMLParserBaseListener;
@@ -143,6 +145,9 @@ public class DefaultXmlParserListener extends XMLParserBaseListener {
 
   @Override
   public void exitOpenTag(OpenTagContext ctx) {
+    System.out.println(ctx);
+    System.out.println(ctx.Name().getText());
+    System.out.println(ctx.attribute());
     startElement(Name.fromString(ctx.Name().getText()), Mappings.attributes(ctx.attribute()));
   }
 
@@ -171,7 +176,11 @@ public class DefaultXmlParserListener extends XMLParserBaseListener {
       namespace = getDefaultNamespace().orElse(null);
     }
 
+    resolveNamespaces(attributes);
+
     handler.startElement(name.getPrefix(), name.getLocalName(), namespace, attributes);
+
+    clearNamespaces(attributes);
   }
 
   private void endElement(Name name) {
@@ -183,30 +192,60 @@ public class DefaultXmlParserListener extends XMLParserBaseListener {
       namespace = getDefaultNamespace().orElse(null);
     }
 
-    handler.endElement(namespace, name.getLocalName(), name.toString());
+    handler.endElement(name.getPrefix(), name.getLocalName(), namespace);
 
     ElementNamespacing namespacing = popElementNamespacing();
 
     removeNamespaces(namespacing);
   }
 
+  private void resolveNamespaces(Attributes attributes) {
+    for (Attribute attribute : attributes) {
+      if (attribute.getPrefix() == null && attribute.getLocalName().equals("xmlns")) {
+        // Skip this
+      } else if (Objects.equals(attribute.getPrefix(), "xmlns")) {
+        // Skip this
+      } else if (attribute.getPrefix() != null) {
+        String namespace = getPrefixNamespace(attribute.getPrefix()).orElse(null);
+        if (namespace != null) {
+          attribute.setNamespace(namespace);
+        }
+      } else {
+        // default namespace does not apply to attributes, per spec.
+      }
+    }
+  }
+
+  private void clearNamespaces(Attributes attributes) {
+    for (Attribute attribute : attributes) {
+      if (attribute.getPrefix() == null && attribute.getLocalName().equals("xmlns")) {
+        // Skip this
+      } else if (Objects.equals(attribute.getPrefix(), "xmlns")) {
+        // Skip this
+      } else if (attribute.getPrefix() != null) {
+        attribute.setNamespace(null);
+      } else {
+        // default namespace does not apply to attributes, per spec.
+      }
+    }
+  }
+
   private ElementNamespacing addNamespaces(Attributes attributes) {
     boolean definesDefaultNamespace = false;
     Set<String> definesNamespacePrefixes = null;
     for (Attribute attribute : attributes) {
-      Name attributeName = Name.fromString(attribute.getLocalName());
-      if (attributeName.toString().equals("xmlns")) {
+      if (attribute.getPrefix() == null && attribute.getLocalName().equals("xmlns")) {
         // TODO Validate namespace?
         pushDefaultNamespace(attribute.getValue());
         definesDefaultNamespace = true;
-      } else if (Objects.equals(attributeName.getPrefix(), "xmlns")) {
+      } else if (Objects.equals(attribute.getPrefix(), "xmlns")) {
         // TODO Validate prefix?
-        String namespacePrefix = attributeName.getLocalName();
+        String namespacePrefix = attribute.getLocalName();
         // TODO Validate namespace?
         String namespace = attribute.getValue();
         // TODO See if we already have prefix? See if we already have namespace?
         pushPrefixNamespace(namespacePrefix, namespace);
-        handler.startPrefixMapping(namespacePrefix, namespace);
+        // handler.startPrefixMapping(namespacePrefix, namespace);
         if (definesNamespacePrefixes == null)
           definesNamespacePrefixes = new HashSet<>(4);
         definesNamespacePrefixes.add(namespacePrefix);
@@ -221,6 +260,23 @@ public class DefaultXmlParserListener extends XMLParserBaseListener {
       popDefaultNamespace();
     for (String prefix : namespacing.getDefinesNamespacePrefixes())
       popPrefixNamespace(prefix);
+  }
+
+
+
+  @Override
+  public void exitElement(ElementContext ctx) {
+    System.out.println(ctx);
+    System.out.println(ctx.openTag());
+    System.out.println(ctx.closeTag());
+    System.out.println(ctx.openCloseTag());
+    super.exitElement(ctx);
+  }
+
+  @Override
+  public void exitContent(ContentContext ctx) {
+    System.out.println(ctx);
+    super.exitContent(ctx);
   }
 
   @Override

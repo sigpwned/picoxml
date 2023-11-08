@@ -62,6 +62,8 @@ public class StreamingXmlWriter {
 
   private static class ElementState {
     public ElementState(String prefix, String localName, int type) {
+      if (Objects.equals(prefix, DEFAULT_PREFIX))
+        prefix = null;
       this.prefix = prefix;
       this.localName = localName;
       this.type = type;

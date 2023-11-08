@@ -78,15 +78,15 @@ public class StreamingXmlReaderTest {
       events.add(format("skippedEntity(%s)", name));
     }
 
-    @Override
-    public void startPrefixMapping(String prefix, String uri) {
-      events.add(format("startPrefixMapping(%s, %s)", prefix, uri));
-    }
-
-    @Override
-    public void endPrefixMapping(String prefix) {
-      events.add(format("endPrefixMapping(%s)", prefix));
-    }
+    // @Override
+    // public void startPrefixMapping(String prefix, String uri) {
+    // events.add(format("startPrefixMapping(%s, %s)", prefix, uri));
+    // }
+    //
+    // @Override
+    // public void endPrefixMapping(String prefix) {
+    // events.add(format("endPrefixMapping(%s)", prefix));
+    // }
   };
 
   public List<String> events = new ArrayList<>();

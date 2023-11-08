@@ -57,7 +57,8 @@ public class StreamingXmlReader {
     lexer.setTokenFactory(new CommonTokenFactory(true));
     TokenStream tokens = new UnbufferedTokenStream<>(lexer);
     XMLParser parser = new XMLParser(tokens);
-    parser.setBuildParseTree(false);
+    // parser.setBuildParseTree(false);
+    parser.setTrimParseTree(true);
 
     return parser;
   }

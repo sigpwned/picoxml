@@ -46,8 +46,4 @@ public interface ContentHandler {
   public void characters(CharSequence cs, int off, int len);
 
   public void skippedEntity(String name);
-
-  public void startPrefixMapping(String prefix, String namespace);
-
-  public void endPrefixMapping(String prefix);
 }

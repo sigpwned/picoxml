@@ -39,6 +39,7 @@ public class Attribute {
   private final String prefix;
   private final String localName;
   private final String value;
+  private String namespace;
 
   public Attribute(String prefix, String localName, String value) {
     if (localName == null)
@@ -60,9 +61,17 @@ public class Attribute {
     return value;
   }
 
+  public String getNamespace() {
+    return namespace;
+  }
+
+  public void setNamespace(String namespace) {
+    this.namespace = namespace;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(localName, prefix, value);
+    return Objects.hash(localName, namespace, prefix, value);
   }
 
   @Override
@@ -74,12 +83,13 @@ public class Attribute {
     if (getClass() != obj.getClass())
       return false;
     Attribute other = (Attribute) obj;
-    return Objects.equals(localName, other.localName) && Objects.equals(prefix, other.prefix)
-        && Objects.equals(value, other.value);
+    return Objects.equals(localName, other.localName) && Objects.equals(namespace, other.namespace)
+        && Objects.equals(prefix, other.prefix) && Objects.equals(value, other.value);
   }
 
   @Override
   public String toString() {
-    return "Attribute [prefix=" + prefix + ", localName=" + localName + ", value=" + value + "]";
+    return "Attribute [prefix=" + prefix + ", localName=" + localName + ", value=" + value
+        + ", namespace=" + namespace + "]";
   }
 }
