@@ -109,7 +109,7 @@ public class DefaultXmlParserListener extends XMLParserBaseListener {
     }
   }
 
-  private final char[] chbuf;
+  private final StringBuilder chbuf;
   private ContentHandler handler;
 
   public DefaultXmlParserListener(ContentHandler handler) {
@@ -120,7 +120,7 @@ public class DefaultXmlParserListener extends XMLParserBaseListener {
   }
 
   protected DefaultXmlParserListener() {
-    this.chbuf = new char[4];
+    this.chbuf = new StringBuilder();
   }
 
   protected void setHandler(ContentHandler newHandler) {
@@ -171,7 +171,7 @@ public class DefaultXmlParserListener extends XMLParserBaseListener {
       namespace = getDefaultNamespace().orElse(null);
     }
 
-    handler.startElement(namespace, name.getLocalName(), name.toString(), attributes);
+    handler.startElement(name.getPrefix(), name.getLocalName(), namespace, attributes);
   }
 
   private void endElement(Name name) {
@@ -194,7 +194,7 @@ public class DefaultXmlParserListener extends XMLParserBaseListener {
     boolean definesDefaultNamespace = false;
     Set<String> definesNamespacePrefixes = null;
     for (Attribute attribute : attributes) {
-      Name attributeName = Name.fromString(attribute.getName());
+      Name attributeName = Name.fromString(attribute.getLocalName());
       if (attributeName.toString().equals("xmlns")) {
         // TODO Validate namespace?
         pushDefaultNamespace(attribute.getValue());
@@ -228,7 +228,7 @@ public class DefaultXmlParserListener extends XMLParserBaseListener {
     switch (node.getSymbol().getType()) {
       case XMLLexer.CDATA:
         CData cdata = Mappings.cdata(node);
-        handler.characters(cdata.getContent().toCharArray(), 0, cdata.getContent().length());
+        handler.characters(cdata.getContent(), 0, cdata.getContent().length());
         break;
       case XMLLexer.PI:
         ProcessingInstruction processingInstruction = Mappings.processingInstruction(node);
@@ -237,20 +237,18 @@ public class DefaultXmlParserListener extends XMLParserBaseListener {
         break;
       case XMLLexer.SEA_WS:
         WhiteSpace whitespace = Mappings.whitespace(node);
-        handler.ignorableWhitespace(whitespace.getContent().toCharArray(), 0,
-            whitespace.getContent().length());
+        handler.characters(whitespace.getContent(), 0, whitespace.getContent().length());
         break;
       case XMLLexer.TEXT:
         Text text = Mappings.text(node);
-        handler.characters(text.getContent().toCharArray(), 0, text.getContent().length());
+        handler.characters(text.getContent(), 0, text.getContent().length());
         break;
       case XMLLexer.EntityRef:
         EntityRef entityRef = Mappings.entityRef(node);
-        Optional<String> maybeValue = StandardEntities.findStandardEntityName(entityRef.getName());
+        Optional<String> maybeValue = StandardEntities.findStandardEntityValue(entityRef.getName());
         if (maybeValue.isPresent()) {
           String value = maybeValue.get();
-          value.getChars(0, value.length(), chbuf, 0);
-          handler.characters(chbuf, 0, value.length());
+          handler.characters(value, 0, value.length());
         } else {
           handler.skippedEntity(entityRef.getName());
         }
@@ -258,8 +256,9 @@ public class DefaultXmlParserListener extends XMLParserBaseListener {
       case XMLLexer.CharRef:
         CharRef charRef = Mappings.charRef(node);
         int cp = Integer.parseInt(charRef.getDigits(), charRef.getBase());
-        int len = Character.toChars(cp, chbuf, 0);
-        handler.characters(chbuf, 0, len);
+        chbuf.setLength(0);
+        chbuf.appendCodePoint(cp);
+        handler.characters(chbuf, 0, chbuf.length());
         break;
       case XMLLexer.COMMENT:
         // Don't care.

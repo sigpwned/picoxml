@@ -35,21 +35,27 @@ import com.sigpwned.picoxml.model.Node;
 import com.sigpwned.picoxml.model.Nodes;
 
 public class Element extends Node {
-  private final String name;
+  private final String prefix;
+  private final String localName;
   private final Attributes attributes;
 
-  public Element(Nodes children, String name, Attributes attributes) {
+  public Element(Nodes children, String prefix, String localName, Attributes attributes) {
     super(children);
-    if (name == null)
+    if (localName == null)
       throw new NullPointerException();
     if (attributes == null)
       throw new NullPointerException();
-    this.name = name;
+    this.prefix = prefix;
+    this.localName = localName;
     this.attributes = attributes;
   }
 
-  public String getName() {
-    return name;
+  public String getPrefix() {
+    return prefix;
+  }
+
+  public String getLocalName() {
+    return localName;
   }
 
   public Attributes getAttributes() {
@@ -60,7 +66,7 @@ public class Element extends Node {
   public int hashCode() {
     final int prime = 31;
     int result = super.hashCode();
-    result = prime * result + Objects.hash(attributes, name);
+    result = prime * result + Objects.hash(attributes, localName, prefix);
     return result;
   }
 
@@ -73,11 +79,13 @@ public class Element extends Node {
     if (getClass() != obj.getClass())
       return false;
     Element other = (Element) obj;
-    return Objects.equals(attributes, other.attributes) && Objects.equals(name, other.name);
+    return Objects.equals(attributes, other.attributes)
+        && Objects.equals(localName, other.localName) && Objects.equals(prefix, other.prefix);
   }
 
   @Override
   public String toString() {
-    return "Element [name=" + name + ", attributes=" + attributes + "]";
+    return "Element [prefix=" + prefix + ", localName=" + localName + ", attributes=" + attributes
+        + "]";
   }
 }

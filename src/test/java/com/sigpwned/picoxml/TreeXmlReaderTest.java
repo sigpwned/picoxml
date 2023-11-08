@@ -29,6 +29,8 @@
  */
 package com.sigpwned.picoxml;
 
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import org.antlr.v4.runtime.CharStream;
@@ -39,7 +41,6 @@ import org.junit.Test;
 import com.sigpwned.picoxml.antlr4.XMLLexer;
 import com.sigpwned.picoxml.antlr4.XMLParser;
 import com.sigpwned.picoxml.model.Document;
-import com.sigpwned.picoxml.model.Node;
 
 public class TreeXmlReaderTest {
   @Test
@@ -53,12 +54,7 @@ public class TreeXmlReaderTest {
 
     Document doc = p.document();
 
-    System.out.println(doc.getRoot().getAttributes().findAttributeByName("alpha"));
-
-    for (Node outer : doc.getRoot().getChildren()) {
-      for (Node inner : outer.getChildren()) {
-        System.out.println(inner);
-      }
-    }
+    assertThat(doc.toString(), is(
+        "Document [prolog=Prolog [declaration=XmlDeclaration [attributes=[Attribute [name=version, value=1.0], Attribute [name=encoding, value=UTF-8]]]], beforeMiscs=[WhiteSpace [content=\n], ProcessingInstruction [name=foobar, content= This is a processing instruction. ], WhiteSpace [content=\n]], root=Element [name=greeting, attributes=[Attribute [name=alpha, value=bravo], Attribute [name=test, value=1 < 2]], children=[Text [content=\n    ], Element [name=hello, attributes=[], children=[Text [content=world]]], Text [content=\n    ], Comment [content= This is a comment ], Text [content=\n    ], Element [name=entities, attributes=[], children=[EntityReference [name=lt], Text [content= ], EntityReference [name=gt], Text [content= ], EntityReference [name=apos], Text [content= ], EntityReference [name=quot], Text [content= ], CharRef [base=10, digits=65], Text [content= ], CharRef [base=16, digits=41]]], Text [content=\n    ], Element [name=selfclosed, attributes=[Attribute [name=name, value=value]], children=[]], Text [content=\n    ], CData [content= This is CDATA. ], Text [content=\n    This is chardata.\n]]], afterMiscs=[]]"));
   }
 }

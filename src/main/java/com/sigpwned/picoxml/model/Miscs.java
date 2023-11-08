@@ -5,19 +5,19 @@
  * Copyright (C) 2023 Andy Boothe
  * ====================================SECTION=====================================
  * This file is part of PicoXML 2 for Java.
- * 
+ *
  * Copyright (C) 2000-2002 Marc De Scheemaecker, All Rights Reserved.
  * Copyright (C) 2020-2020 Saúl Hidalgo, All Rights Reserved.
  * Copyright (C) 2023-2023 Andy Boothe, All Rights Reserved.
- * 
+ *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
  * arising from the use of this software.
- * 
+ *
  * Permission is granted to anyone to use this software for any purpose,
  * including commercial applications, and to alter it and redistribute it
  * freely, subject to the following restrictions:
- * 
+ *
  * 1. The origin of this software must not be misrepresented; you must not
  *    claim that you wrote the original software. If you use this software
  *    in a product, an acknowledgment in the product documentation would be
@@ -31,11 +31,13 @@ package com.sigpwned.picoxml.model;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.joining;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -213,6 +215,13 @@ public class Miscs implements List<Misc> {
   @Override
   public <T> T[] toArray(T[] a) {
     return getDelegate().toArray(a);
+  }
+
+  @Override
+  public String toString() {
+    if (isEmpty())
+      return "[]";
+    return "[" + stream().map(Objects::toString).collect(joining(", ")) + "]";
   }
 
   private List<Misc> getDelegate() {

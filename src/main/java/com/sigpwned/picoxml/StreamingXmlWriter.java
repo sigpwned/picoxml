@@ -1,3 +1,32 @@
+/*-
+ * =================================LICENSE_START==================================
+ * picoxml
+ * ====================================SECTION=====================================
+ * Copyright (C) 2023 Andy Boothe
+ * ====================================SECTION=====================================
+ * This file is part of PicoXML 2 for Java.
+ *
+ * Copyright (C) 2000-2002 Marc De Scheemaecker, All Rights Reserved.
+ * Copyright (C) 2020-2020 Saúl Hidalgo, All Rights Reserved.
+ * Copyright (C) 2023-2023 Andy Boothe, All Rights Reserved.
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty.  In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ * 1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ * 2. Altered source versions must be plainly marked as such, and must not be
+ *    misrepresented as being the original software.
+ * 3. This notice may not be removed or altered from any source distribution.
+ * ==================================LICENSE_END===================================
+ */
 package com.sigpwned.picoxml;
 
 import java.io.IOException;
@@ -7,6 +36,7 @@ import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 import com.sigpwned.picoxml.util.XmlStrings;
@@ -21,12 +51,12 @@ public class StreamingXmlWriter {
   private static final int TYPE_DOCUMENT = 1;
 
   /**
-   * A self-closing tag, e.g., <tag />
+   * A self-closing tag, e.g., &lt;tag /&gt;
    */
   private static final int TYPE_SELF_CLOSE = 2;
 
   /**
-   * A traditional open/close tag, e.g., <tag></tag>
+   * A traditional open/close tag, e.g., &lt;tag&gt;&lt;/tag&gt;
    */
   private static final int TYPE_OPEN_CLOSE = 3;
 
@@ -81,10 +111,10 @@ public class StreamingXmlWriter {
     public void addNamespace(String prefix, String namespace) {
       if (prefix == null)
         throw new NullPointerException();
+      if (prefix.equals(DEFAULT_PREFIX))
+        throw new IllegalArgumentException("cannot set default namespace using addNamespace");
       if (namespace == null)
         throw new NullPointerException();
-      if (prefix.equals(DEFAULT_NAMESPACE))
-        throw new IllegalArgumentException("use setDefaultNamespace() to set default namespace");
       if (prefixNamespaces != null && prefixNamespaces.containsKey(prefix))
         throw new IllegalStateException("prefix " + prefix + " already set for this tag");
       if (namespacePrefixes != null && namespacePrefixes.containsKey(namespace))
@@ -108,8 +138,6 @@ public class StreamingXmlWriter {
     }
   }
 
-  private static final String DEFAULT_NAMESPACE = "";
-
   private final Writer writer;
 
   public StreamingXmlWriter(Writer writer) {
@@ -132,14 +160,19 @@ public class StreamingXmlWriter {
     write("]]>");
   }
 
-  public void writeCharacters(char[] text, int start, int len) {
+  public void writeCharacters(char[] text, int off, int len) {
     requireContentWriteable();
-    write(text, start, len);
+    writeCharacters(new String(text, off, len));
+  }
+
+  public void writeCharacters(CharSequence text, int off, int len) {
+    requireContentWriteable();
+    writeCharacters(text.subSequence(off, off + len).toString());
   }
 
   public void writeCharacters(String text) {
     requireContentWriteable();
-    write(text);
+    write(XmlStrings.escape(text));
   }
 
   public void writeComment(String data) {
@@ -150,19 +183,17 @@ public class StreamingXmlWriter {
   }
 
   public void writeStartElement(String localName) {
-    writeStartElement(DEFAULT_NAMESPACE, localName, DEFAULT_NAMESPACE);
+    writeStartElement(null, localName);
   }
 
-  public void writeStartElement(String namespaceURI, String localName) {
-    String prefix = findPrefixByNamespace(namespaceURI)
-        .orElseThrow(() -> new IllegalArgumentException("no namespace " + namespaceURI));
-    writeStartElement(prefix, localName, namespaceURI);
-  }
-
-  public void writeStartElement(String prefix, String localName, String namespaceURI) {
+  public void writeStartElement(String prefix, String localName) {
+    if (localName == null)
+      throw new NullPointerException();
+    if (Objects.equals(prefix, DEFAULT_PREFIX))
+      prefix = null;
     requireElementWriteable();
     write("<");
-    if (!prefix.equals(DEFAULT_NAMESPACE)) {
+    if (prefix != null) {
       write(prefix);
       write(":");
     }
@@ -179,7 +210,7 @@ public class StreamingXmlWriter {
     }
 
     write("</");
-    if (!state.getPrefix().equals(DEFAULT_NAMESPACE)) {
+    if (state.getPrefix() != null) {
       write(state.getPrefix());
       write(":");
     }
@@ -188,48 +219,46 @@ public class StreamingXmlWriter {
   }
 
   public void writeEmptyElement(String localName) {
-    writeEmptyElement(DEFAULT_NAMESPACE, localName, DEFAULT_NAMESPACE);
+    writeEmptyElement(null, localName);
   }
 
-  public void writeEmptyElement(String namespaceURI, String localName) {
-    String prefix = findPrefixByNamespace(namespaceURI)
-        .orElseThrow(() -> new IllegalArgumentException("no namespace " + namespaceURI));
-    writeEmptyElement(prefix, localName, namespaceURI);
-  }
-
-  public void writeEmptyElement(String prefix, String localName, String namespaceURI) {
+  public void writeEmptyElement(String prefix, String localName) {
+    if (localName == null)
+      throw new NullPointerException();
+    if (Objects.equals(prefix, DEFAULT_PREFIX))
+      prefix = null;
     requireElementWriteable();
     write("<");
-    write(prefix);
-    write(":");
+    if (prefix != null) {
+      write(prefix);
+      write(":");
+    }
     write(localName);
     pushState(new ElementState(prefix, localName, TYPE_SELF_CLOSE));
   }
 
-  public void writeDefaultNamespace(String namespaceURI) {
-    writeAttribute("xmlns", namespaceURI);
-    peekState().setDefaultNamespace(namespaceURI);
+  public void writeDefaultNamespace(String namespace) {
+    writeAttribute("xmlns", namespace);
+    peekState().setDefaultNamespace(namespace);
   }
 
   public void writeNamespace(String prefix, String namespace) {
-    writeAttribute("xmlns", namespace, prefix, namespace);
+    writeAttribute("xmlns", prefix, namespace);
     peekState().addNamespace(prefix, namespace);
   }
 
   public void writeAttribute(String localName, String value) {
-    writeAttribute(DEFAULT_NAMESPACE, DEFAULT_NAMESPACE, localName, value);
+    writeAttribute(null, localName, value);
   }
 
-  public void writeAttribute(String namespaceURI, String localName, String value) {
-    String prefix = findPrefixByNamespace(namespaceURI)
-        .orElseThrow(() -> new IllegalArgumentException("no namespace " + namespaceURI));
-    writeAttribute(prefix, namespaceURI, localName, value);
-  }
-
-  public void writeAttribute(String prefix, String namespaceURI, String localName, String value) {
+  public void writeAttribute(String prefix, String localName, String value) {
+    if (localName == null)
+      throw new NullPointerException();
+    if (Objects.equals(prefix, DEFAULT_PREFIX))
+      prefix = null;
     requireAttributeWriteable();
     write(" ");
-    if (!prefix.equals(DEFAULT_NAMESPACE)) {
+    if (prefix != null) {
       write(prefix);
       write(":");
     }
@@ -290,6 +319,11 @@ public class StreamingXmlWriter {
     if (state == null) {
       // If there are no elements, then we haven't opened the document.
       throw new IllegalStateException("document not open");
+    }
+
+    if (state.getType() == TYPE_DOCUMENT) {
+      // This is fine.
+      return;
     }
 
     if (state.getOpen() == false) {
@@ -373,14 +407,6 @@ public class StreamingXmlWriter {
     }
   }
 
-  private void write(char[] chbuf, int off, int len) {
-    try {
-      writer.write(chbuf, off, len);
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
-  }
-
   public void close() {
     try {
       writer.close();
@@ -398,8 +424,7 @@ public class StreamingXmlWriter {
   }
 
   // NAMESPACES AND PREFIXES //////////////////////////////////////////////////
-  @SuppressWarnings("unused")
-  private Optional<String> findDefaultNamespace() {
+  public Optional<String> getDefaultNamespace() {
     ListIterator<ElementState> iterator = states.listIterator(states.size());
     while (iterator.hasPrevious()) {
       ElementState state = iterator.previous();
@@ -409,14 +434,20 @@ public class StreamingXmlWriter {
     return Optional.empty();
   }
 
-  private Optional<String> findPrefixByNamespace(String namespace) {
+  public static final String DEFAULT_PREFIX = "";
+
+  /**
+   * If the given namespace has a defined prefix, then returns the prefix. If the given namespace is
+   * the current default namespace, then returns {@link #DEFAULT_PREFIX}. Otherwise, returns empty.
+   */
+  public Optional<String> findPrefixByNamespace(String namespace) {
     boolean defaulted = false;
     ListIterator<ElementState> iterator = states.listIterator(states.size());
     while (iterator.hasPrevious()) {
       ElementState state = iterator.previous();
       if (state.getDefaultNamespace() != null && !defaulted) {
         if (state.getDefaultNamespace().equals(namespace))
-          return Optional.of(DEFAULT_NAMESPACE);
+          return Optional.of(DEFAULT_PREFIX);
         defaulted = true;
       }
       String prefix = state.getNamespacePrefix(namespace);
@@ -426,13 +457,16 @@ public class StreamingXmlWriter {
     return Optional.empty();
   }
 
-  @SuppressWarnings("unused")
-  private Optional<String> findNamespaceByPrefix(String prefix) {
+  /**
+   * If the given prefix has a defined namespace, then returns the namespace, If the given prefix is
+   * {@link #DEFAULT_PREFIX}, then returns the current default namespace. Otherwise, returns empty.
+   */
+  public Optional<String> findNamespaceByPrefix(String prefix) {
     ListIterator<ElementState> iterator = states.listIterator(states.size());
     while (iterator.hasPrevious()) {
       ElementState state = iterator.previous();
       if (state.getDefaultNamespace() != null) {
-        if (prefix.equals(""))
+        if (prefix.equals(DEFAULT_PREFIX))
           return Optional.of(state.getDefaultNamespace());
       }
       String namespace = state.getPrefixNamespace(prefix);

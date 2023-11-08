@@ -5,19 +5,19 @@
  * Copyright (C) 2023 Andy Boothe
  * ====================================SECTION=====================================
  * This file is part of PicoXML 2 for Java.
- * 
+ *
  * Copyright (C) 2000-2002 Marc De Scheemaecker, All Rights Reserved.
  * Copyright (C) 2020-2020 Saúl Hidalgo, All Rights Reserved.
  * Copyright (C) 2023-2023 Andy Boothe, All Rights Reserved.
- * 
+ *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
  * arising from the use of this software.
- * 
+ *
  * Permission is granted to anyone to use this software for any purpose,
  * including commercial applications, and to alter it and redistribute it
  * freely, subject to the following restrictions:
- * 
+ *
  * 1. The origin of this software must not be misrepresented; you must not
  *    claim that you wrote the original software. If you use this software
  *    in a product, an acknowledgment in the product documentation would be
@@ -32,22 +32,28 @@ package com.sigpwned.picoxml.model;
 import java.util.Objects;
 
 public class Attribute {
-  public static Attribute of(String name, String value) {
-    return new Attribute(name, value);
+  public static Attribute of(String prefix, String localName, String value) {
+    return new Attribute(prefix, localName, value);
   }
 
-  private final String name;
+  private final String prefix;
+  private final String localName;
   private final String value;
 
-  public Attribute(String name, String value) {
-    if (name == null)
+  public Attribute(String prefix, String localName, String value) {
+    if (localName == null)
       throw new NullPointerException();
-    this.name = name;
+    this.prefix = prefix;
+    this.localName = localName;
     this.value = value;
   }
 
-  public String getName() {
-    return name;
+  public String getPrefix() {
+    return prefix;
+  }
+
+  public String getLocalName() {
+    return localName;
   }
 
   public String getValue() {
@@ -56,7 +62,7 @@ public class Attribute {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, value);
+    return Objects.hash(localName, prefix, value);
   }
 
   @Override
@@ -68,11 +74,12 @@ public class Attribute {
     if (getClass() != obj.getClass())
       return false;
     Attribute other = (Attribute) obj;
-    return Objects.equals(name, other.name) && Objects.equals(value, other.value);
+    return Objects.equals(localName, other.localName) && Objects.equals(prefix, other.prefix)
+        && Objects.equals(value, other.value);
   }
 
   @Override
   public String toString() {
-    return "Attribute [name=" + name + ", value=" + value + "]";
+    return "Attribute [prefix=" + prefix + ", localName=" + localName + ", value=" + value + "]";
   }
 }

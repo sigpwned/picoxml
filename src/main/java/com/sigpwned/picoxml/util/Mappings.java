@@ -36,6 +36,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import com.sigpwned.picoxml.Name;
 import com.sigpwned.picoxml.antlr4.XMLParser.AttributeContext;
 import com.sigpwned.picoxml.antlr4.XMLParser.ChardataContext;
 import com.sigpwned.picoxml.antlr4.XMLParser.ContentContext;
@@ -113,7 +114,7 @@ public final class Mappings {
 
   public static Element element(ElementContext c) {
     if (c.openTag() != null && c.closeTag() != null) {
-      String name = c.openTag().Name().getText();
+      Name name = Name.fromString(c.openTag().Name().getText());
       Attributes attributes = attributes(c.openTag().attribute());
       // Open and closing tag
       // TODO Should we check the name on the close tag?
@@ -144,12 +145,12 @@ public final class Mappings {
 
       Nodes nodes = new Nodes(children.stream().map(Map.Entry::getValue).collect(toList()));
 
-      return new Element(nodes, name, attributes);
+      return new Element(nodes, name.getPrefix(), name.getLocalName(), attributes);
     }
     if (c.openCloseTag() != null) {
-      String name = c.openCloseTag().Name().getText();
+      Name name = Name.fromString(c.openCloseTag().Name().getText());
       Attributes attributes = attributes(c.openCloseTag().attribute());
-      return new Element(Nodes.EMPTY, name, attributes);
+      return new Element(Nodes.EMPTY, name.getPrefix(), name.getLocalName(), attributes);
     }
     throw new AssertionError(c);
   }
@@ -235,9 +236,9 @@ public final class Mappings {
 
   public static Attribute attribute(AttributeContext c) {
     // TODO Should this have an EntityResolver?
-    String name = c.Name().getText();
+    Name name = Name.fromString(c.Name().getText());
     String string = c.STRING().getText();
     String value = XmlStrings.unescape(string.substring(1, string.length() - 1));
-    return new Attribute(name, value);
+    return new Attribute(name.getPrefix(), name.getLocalName(), value);
   }
 }

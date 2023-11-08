@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<alpha xmlns="https://www.example.com/default1">
+    <bravo />
+    <charlie xmlns:x="https://www.example.com/x">
+        <x:delta a="b" x:c="d" />
+    </charlie>
+    <echo xmlns="https://www.example.com/default2">
+        <foxtrot />
+    </echo>
+</alpha>

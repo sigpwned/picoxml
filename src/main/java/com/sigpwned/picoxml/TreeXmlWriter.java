@@ -5,19 +5,19 @@
  * Copyright (C) 2023 Andy Boothe
  * ====================================SECTION=====================================
  * This file is part of PicoXML 2 for Java.
- * 
+ *
  * Copyright (C) 2000-2002 Marc De Scheemaecker, All Rights Reserved.
  * Copyright (C) 2020-2020 Saúl Hidalgo, All Rights Reserved.
  * Copyright (C) 2023-2023 Andy Boothe, All Rights Reserved.
- * 
+ *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
  * arising from the use of this software.
- * 
+ *
  * Permission is granted to anyone to use this software for any purpose,
  * including commercial applications, and to alter it and redistribute it
  * freely, subject to the following restrictions:
- * 
+ *
  * 1. The origin of this software must not be misrepresented; you must not
  *    claim that you wrote the original software. If you use this software
  *    in a product, an acknowledgment in the product documentation would be
@@ -70,7 +70,11 @@ public class TreeXmlWriter {
 
   public void element(Element element) throws IOException {
     getWriter().write("<");
-    getWriter().write(element.getName());
+    if (element.getPrefix() != null) {
+      getWriter().write(element.getPrefix());
+      getWriter().write(":");
+    }
+    getWriter().write(element.getLocalName());
     attributes(element.getAttributes());
 
     if (element.getChildren().isEmpty()) {
@@ -79,7 +83,11 @@ public class TreeXmlWriter {
       getWriter().write(">");
       nodes(element.getChildren());
       getWriter().write("</");
-      getWriter().write(element.getName());
+      if (element.getPrefix() != null) {
+        getWriter().write(element.getPrefix());
+        getWriter().write(":");
+      }
+      getWriter().write(element.getLocalName());
       getWriter().write(">");
     }
   }
@@ -207,7 +215,11 @@ public class TreeXmlWriter {
   }
 
   public void attribute(Attribute attribute) throws IOException {
-    getWriter().write(attribute.getName());
+    if (attribute.getPrefix() != null) {
+      getWriter().write(attribute.getPrefix());
+      getWriter().write(":");
+    }
+    getWriter().write(attribute.getLocalName());
     getWriter().write("=");
     getWriter().write("\"");
     getWriter().write(XmlStrings.escape(attribute.getValue()));
