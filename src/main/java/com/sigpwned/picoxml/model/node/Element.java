@@ -96,6 +96,6 @@ public class Element extends Node {
   @Override
   public String toString() {
     return "Element [prefix=" + prefix + ", localName=" + localName + ", attributes=" + attributes
-        + ", namespace=" + namespace + "]";
+        + ", namespace=" + namespace + ", children=" + getChildren() + "]";
   }
 }

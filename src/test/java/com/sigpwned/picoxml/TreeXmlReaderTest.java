@@ -44,7 +44,7 @@ import com.sigpwned.picoxml.model.Document;
 
 public class TreeXmlReaderTest {
   @Test
-  public void test() throws IOException {
+  public void simpleTest() throws IOException {
     CharStream s = CharStreams.fromStream(getClass().getResourceAsStream("simple.xml"),
         StandardCharsets.UTF_8);
     XMLLexer lexer = new XMLLexer(s);
@@ -55,6 +55,21 @@ public class TreeXmlReaderTest {
     Document doc = p.document();
 
     assertThat(doc.toString(), is(
-        "Document [prolog=Prolog [declaration=XmlDeclaration [attributes=[Attribute [name=version, value=1.0], Attribute [name=encoding, value=UTF-8]]]], beforeMiscs=[WhiteSpace [content=\n], ProcessingInstruction [name=foobar, content= This is a processing instruction. ], WhiteSpace [content=\n]], root=Element [name=greeting, attributes=[Attribute [name=alpha, value=bravo], Attribute [name=test, value=1 < 2]], children=[Text [content=\n    ], Element [name=hello, attributes=[], children=[Text [content=world]]], Text [content=\n    ], Comment [content= This is a comment ], Text [content=\n    ], Element [name=entities, attributes=[], children=[EntityReference [name=lt], Text [content= ], EntityReference [name=gt], Text [content= ], EntityReference [name=apos], Text [content= ], EntityReference [name=quot], Text [content= ], CharRef [base=10, digits=65], Text [content= ], CharRef [base=16, digits=41]]], Text [content=\n    ], Element [name=selfclosed, attributes=[Attribute [name=name, value=value]], children=[]], Text [content=\n    ], CData [content= This is CDATA. ], Text [content=\n    This is chardata.\n]]], afterMiscs=[]]"));
+        "Document [prolog=Prolog [declaration=XmlDeclaration [attributes=[Attribute [prefix=null, localName=version, value=1.0, namespace=null], Attribute [prefix=null, localName=encoding, value=UTF-8, namespace=null]]]], beforeMiscs=[WhiteSpace [content=\n], ProcessingInstruction [name=foobar, content= This is a processing instruction. ], WhiteSpace [content=\n]], root=Element [prefix=null, localName=greeting, attributes=[Attribute [prefix=null, localName=alpha, value=bravo, namespace=null], Attribute [prefix=null, localName=test, value=1 < 2, namespace=null]], namespace=null, children=[WhiteSpace [content=\n    ], Element [prefix=null, localName=hello, attributes=[], namespace=null, children=[Text [content=world]]], WhiteSpace [content=\n    ], Comment [content= This is a comment ], WhiteSpace [content=\n    ], Element [prefix=null, localName=entities, attributes=[], namespace=null, children=[EntityReference [name=lt], WhiteSpace [content= ], EntityReference [name=gt], WhiteSpace [content= ], EntityReference [name=apos], WhiteSpace [content= ], EntityReference [name=quot], WhiteSpace [content= ], CharRef [base=10, digits=65], WhiteSpace [content= ], CharRef [base=16, digits=41]]], WhiteSpace [content=\n    ], Element [prefix=null, localName=selfclosed, attributes=[Attribute [prefix=null, localName=name, value=value, namespace=null]], namespace=null, children=[]], WhiteSpace [content=\n    ], CData [content= This is CDATA. ], Text [content=\n    This is chardata.\n]]], afterMiscs=[]]"));
+  }
+
+  @Test
+  public void namespacesTest() throws IOException {
+    CharStream s = CharStreams.fromStream(getClass().getResourceAsStream("namespaces.xml"),
+        StandardCharsets.UTF_8);
+    XMLLexer lexer = new XMLLexer(s);
+    TokenStream tokens = new CommonTokenStream(lexer);
+    XMLParser parser = new XMLParser(tokens);
+    TreeXmlReader p = new TreeXmlReader(parser);
+
+    Document doc = p.document();
+
+    assertThat(doc.toString(), is(
+        "Document [prolog=Prolog [declaration=XmlDeclaration [attributes=[Attribute [prefix=null, localName=version, value=1.0, namespace=null], Attribute [prefix=null, localName=encoding, value=UTF-8, namespace=null]]]], beforeMiscs=[WhiteSpace [content=\n]], root=Element [prefix=null, localName=alpha, attributes=[Attribute [prefix=null, localName=xmlns, value=https://www.example.com/default1, namespace=null]], namespace=https://www.example.com/default1, children=[WhiteSpace [content=\n    ], Element [prefix=null, localName=bravo, attributes=[], namespace=https://www.example.com/default1, children=[]], WhiteSpace [content=\n    ], Element [prefix=null, localName=charlie, attributes=[Attribute [prefix=xmlns, localName=x, value=https://www.example.com/x, namespace=null]], namespace=https://www.example.com/default1, children=[WhiteSpace [content=\n        ], Element [prefix=x, localName=delta, attributes=[Attribute [prefix=null, localName=a, value=b, namespace=null], Attribute [prefix=x, localName=c, value=d, namespace=https://www.example.com/x]], namespace=https://www.example.com/x, children=[]], WhiteSpace [content=\n    ]]], WhiteSpace [content=\n    ], Element [prefix=null, localName=echo, attributes=[Attribute [prefix=null, localName=xmlns, value=https://www.example.com/default2, namespace=null]], namespace=https://www.example.com/default2, children=[WhiteSpace [content=\n        ], Element [prefix=null, localName=foxtrot, attributes=[], namespace=https://www.example.com/default2, children=[]], WhiteSpace [content=\n    ]]], WhiteSpace [content=\n]]], afterMiscs=[]]"));
   }
 }

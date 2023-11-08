@@ -60,7 +60,7 @@ public class TreeXmlWriter {
     this.writer = writer;
   }
 
-  public void write(Document doc) throws IOException {
+  public void document(Document doc) throws IOException {
     if (doc.getProlog() != null)
       prolog(doc.getProlog());
     miscs(doc.getBeforeMiscs());
@@ -129,6 +129,8 @@ public class TreeXmlWriter {
       ref((Ref) node);
     } else if (node instanceof Text) {
       text((Text) node);
+    } else if (node instanceof WhiteSpace) {
+      whiteSpace((WhiteSpace) node);
     } else {
       throw new AssertionError(node);
     }

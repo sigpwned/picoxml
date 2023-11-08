@@ -45,7 +45,7 @@ import com.sigpwned.picoxml.model.Document;
 
 public class TreeXmlWriterTest {
   @Test
-  public void test() throws IOException {
+  public void simpleTest() throws IOException {
     CharStream s = CharStreams.fromStream(getClass().getResourceAsStream("simple.xml"),
         StandardCharsets.UTF_8);
     XMLLexer lexer = new XMLLexer(s);
@@ -57,7 +57,7 @@ public class TreeXmlWriterTest {
 
     StringWriter w = new StringWriter();
     try {
-      new TreeXmlWriter(w).write(doc);
+      new TreeXmlWriter(w).document(doc);
     } finally {
       w.close();
     }
@@ -70,5 +70,32 @@ public class TreeXmlWriterTest {
             + "    <entities>&lt; &gt; &apos; &quot; &#65; &#x41;</entities>\n"
             + "    <selfclosed name=\"value\" />\n" + "    <!CDATA[[ This is CDATA. ]]>\n"
             + "    This is chardata.\n" + "</greeting>"));
+  }
+
+  @Test
+  public void namespacesTest() throws IOException {
+    CharStream s = CharStreams.fromStream(getClass().getResourceAsStream("namespaces.xml"),
+        StandardCharsets.UTF_8);
+    XMLLexer lexer = new XMLLexer(s);
+    TokenStream tokens = new CommonTokenStream(lexer);
+    XMLParser parser = new XMLParser(tokens);
+    TreeXmlReader p = new TreeXmlReader(parser);
+
+    Document doc = p.document();
+
+    StringWriter w = new StringWriter();
+    try {
+      new TreeXmlWriter(w).document(doc);
+    } finally {
+      w.close();
+    }
+
+    assertThat(w.toString(),
+        is("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+            + "<alpha xmlns=\"https://www.example.com/default1\">\n" + "    <bravo />\n"
+            + "    <charlie xmlns:x=\"https://www.example.com/x\">\n"
+            + "        <x:delta a=\"b\" x:c=\"d\" />\n" + "    </charlie>\n"
+            + "    <echo xmlns=\"https://www.example.com/default2\">\n" + "        <foxtrot />\n"
+            + "    </echo>\n" + "</alpha>"));
   }
 }
