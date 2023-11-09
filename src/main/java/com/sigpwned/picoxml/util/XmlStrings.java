@@ -4,38 +4,32 @@
  * ====================================SECTION=====================================
  * Copyright (C) 2023 Andy Boothe
  * ====================================SECTION=====================================
- * This file is part of PicoXML 2 for Java.
- *
- * Copyright (C) 2000-2002 Marc De Scheemaecker, All Rights Reserved.
- * Copyright (C) 2020-2020 Saúl Hidalgo, All Rights Reserved.
- * Copyright (C) 2023-2023 Andy Boothe, All Rights Reserved.
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- * 1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  * ==================================LICENSE_END===================================
  */
 package com.sigpwned.picoxml.util;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import com.sigpwned.picoxml.exception.InvalidSyntaxXmlException;
 
 public final class XmlStrings {
   private XmlStrings() {}
@@ -84,27 +78,92 @@ public final class XmlStrings {
     return buf.toString();
   }
 
+  public static class UnescapedXmlString {
+    private final boolean containsNakedAmpersand;
+    private final List<String> unrecognizedEntities;
+    private final String value;
+
+    public UnescapedXmlString(boolean containsNakedAmpersand, List<String> unrecognizedEntities,
+        String value) {
+      if (unrecognizedEntities == null)
+        throw new NullPointerException();
+      if (value == null)
+        throw new NullPointerException();
+      this.containsNakedAmpersand = containsNakedAmpersand;
+      this.unrecognizedEntities =
+          unrecognizedEntities.isEmpty() ? emptyList() : unmodifiableList(unrecognizedEntities);
+      this.value = value;
+    }
+
+    public boolean isContainsNakedAmpersand() {
+      return containsNakedAmpersand;
+    }
+
+    public List<String> getUnrecognizedEntities() {
+      return unrecognizedEntities;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(containsNakedAmpersand, unrecognizedEntities, value);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      UnescapedXmlString other = (UnescapedXmlString) obj;
+      return containsNakedAmpersand == other.containsNakedAmpersand
+          && Objects.equals(unrecognizedEntities, other.unrecognizedEntities)
+          && Objects.equals(value, other.value);
+    }
+
+    @Override
+    public String toString() {
+      return "UnescapedXmlString [containsNakedAmpersand=" + containsNakedAmpersand
+          + ", unrecognizedEntities=" + unrecognizedEntities + ", value=" + value + "]";
+    }
+  }
+
   /**
    * Escapes using standard entities only
    */
-  public static String unescape(String s) {
+  public static UnescapedXmlString unescape(String s) {
     int start = 0;
     int amp = s.indexOf("&");
+    boolean containsNakedAmpersand = false;
+    List<String> unrecognizedEntities = null;
     final StringBuilder buf = new StringBuilder();
     while (amp != -1) {
       buf.append(s, start, amp);
 
-      final int semi = s.indexOf(";", amp + 1);
+      int semi = s.indexOf(";", amp + 1);
+      final String entityName;
       if (semi == -1) {
         // TODO Line and column
-        throw new InvalidSyntaxXmlException(0, 0);
+        containsNakedAmpersand = true;
+        entityName = StandardEntities.AMP_NAME;
+        semi = amp;
+      } else {
+        entityName = s.substring(amp + 1, semi);
       }
-      final String entityName = s.substring(amp + 1, semi);
       final Optional<String> maybeEntityValue =
           StandardEntities.findStandardEntityValue(entityName);
       if (maybeEntityValue.isPresent()) {
         buf.append(maybeEntityValue.get());
       } else {
+        // TODO Should we issue some kind of warning?
+        if (unrecognizedEntities == null)
+          unrecognizedEntities = new ArrayList<>();
+        unrecognizedEntities.add(entityName);
         buf.append("&").append(entityName).append(";");
       }
 
@@ -114,6 +173,8 @@ public final class XmlStrings {
 
     buf.append(s, start, s.length());
 
-    return buf.toString();
+    return new UnescapedXmlString(containsNakedAmpersand,
+        Optional.ofNullable(unrecognizedEntities).orElseGet(Collections::emptyList),
+        buf.toString());
   }
 }
