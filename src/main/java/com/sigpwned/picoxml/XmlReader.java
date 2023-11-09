@@ -60,7 +60,6 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
-import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
@@ -92,7 +91,7 @@ import com.sigpwned.picoxml.model.node.Text;
 import com.sigpwned.picoxml.model.node.WhiteSpace;
 import com.sigpwned.picoxml.model.node.ref.CharRef;
 import com.sigpwned.picoxml.model.node.ref.EntityRef;
-import com.sigpwned.picoxml.util.XmlByteStreams;
+import com.sigpwned.picoxml.util.XmlEncodings;
 import com.sigpwned.picoxml.util.XmlStrings;
 
 /**
@@ -180,6 +179,7 @@ public class XmlReader {
       public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line,
           int charPositionInLine, String msg, RecognitionException e) {
         System.out.println("lexer.syntaxError");
+        e.printStackTrace(System.out);
         throw new InvalidSyntaxXmlException(line, charPositionInLine);
       }
     });
@@ -202,7 +202,7 @@ public class XmlReader {
   }
 
   public XmlReader(InputStream in, Charset defaultCharset) throws IOException {
-    this(XmlByteStreams.decode(in, defaultCharset));
+    this(XmlEncodings.decode(in, defaultCharset));
   }
 
   public XmlReader(String s) throws IOException {
@@ -251,6 +251,7 @@ public class XmlReader {
       public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line,
           int charPositionInLine, String msg, RecognitionException e) {
         System.out.println("parser.syntaxError");
+        System.out.println(msg);
         throw new InvalidSyntaxXmlException(line, charPositionInLine);
       }
     };
@@ -259,21 +260,21 @@ public class XmlReader {
 
       @Override
       public void visitTerminal(TerminalNode node) {
-        Token symbol = node.getSymbol();
-        switch (symbol.getType()) {
-          case XMLLexer.COMMENT:
-            // SYNTAX: <!--$CONTENT-->
-            if (symbol.getText().substring(4, symbol.getText().length() - 3).contains("--")) {
-              throw new InvalidSyntaxXmlException(symbol.getLine(), symbol.getCharPositionInLine());
-            }
-            break;
-          case XMLLexer.TEXT:
-            if (symbol.getText().contains("]]>")) {
-              // Per spec, characters cannot contain literal "]]>" sequence.
-              throw new InvalidSyntaxXmlException(symbol.getLine(), symbol.getCharPositionInLine());
-            }
-            break;
-        }
+        // Token symbol = node.getSymbol();
+        // switch (symbol.getType()) {
+        // case XMLLexer.COMMENT:
+        // // SYNTAX: <!--$CONTENT-->
+        // if (symbol.getText().substring(4, symbol.getText().length() - 3).contains("--")) {
+        // throw new InvalidSyntaxXmlException(symbol.getLine(), symbol.getCharPositionInLine());
+        // }
+        // break;
+        // case XMLLexer.TEXT:
+        // if (symbol.getText().contains("]]>")) {
+        // // Per spec, characters cannot contain literal "]]>" sequence.
+        // throw new InvalidSyntaxXmlException(symbol.getLine(), symbol.getCharPositionInLine());
+        // }
+        // break;
+        // }
       }
     });
 

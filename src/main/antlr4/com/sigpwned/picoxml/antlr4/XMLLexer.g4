@@ -32,17 +32,14 @@ lexer grammar XMLLexer;
 // Default "mode": Everything OUTSIDE of a tag
 COMMENT     :   '<!--' .*? '-->' ;
 CDATA       :   '<![CDATA[' .*? ']]>' ;
-/** Scarf all DTD stuff, Entity Declarations like <!ENTITY ...>,
- *  and Notation Declarations <!NOTATION ...>
- */
-DTD         :   '<!' .*? '>' ;
 EntityRef   :   '&' Name ';' ;
 CharRef     :   '&#' DIGIT+ ';'
             |   '&#x' HEXDIGIT+ ';'
             ;
-SEA_WS      :   (' '|'\t'|'\r'? '\n')+ ;
+SEA_WS      :   (' '|'\t'|'\r'|'\n')+ ;
 
 OPEN        :   '<'                     -> pushMode(INSIDE) ;
+DTD_OPEN    :   '<!'                    -> more, pushMode(DOC_TYPE_DEF) ;
 XMLDeclOpen :   '<?xml' S               -> pushMode(INSIDE) ;
 SPECIAL_OPEN:   '<?' Name               -> more, pushMode(PROC_INSTR) ;
 
@@ -56,8 +53,8 @@ SPECIAL_CLOSE:  '?>'                    -> popMode ; // close <?xml...?>
 SLASH_CLOSE :   '/>'                    -> popMode ;
 SLASH       :   '/' ;
 EQUALS      :   '=' ;
-STRING      :   '"' ~[<"]* '"'
-            |   '\'' ~[<']* '\''
+STRING      :   '"' ( ~[<"&] | EntityRef | CharRef )* '"'
+            |   '\'' ( ~[<'&] | EntityRef | CharRef )* '\''
             ;
 Name        :   NameStartChar NameChar* ;
 S           :   [ \t\r\n]               -> skip ;
@@ -79,15 +76,49 @@ NameChar    :   NameStartChar
 fragment
 NameStartChar
             :   [_:a-zA-Z]
+            |   '\u00C0'..'\u00D6'
+            |   '\u00D8'..'\u00F6'
+            |   '\u00F8'..'\u02FF'
+            |   '\u0370'..'\u037D'
+            |   '\u037F'..'\u1FFF'
+            |   '\u200C'..'\u200D'
             |   '\u2070'..'\u218F'
             |   '\u2C00'..'\u2FEF'
             |   '\u3001'..'\uD7FF'
             |   '\uF900'..'\uFDCF'
             |   '\uFDF0'..'\uFFFD'
+            |   '\u{10000}'..'\u{EFFFF}'
             ;
 
 // ----------------- Handle <? ... ?> ---------------------
 mode PROC_INSTR;
 
 PI          :   '?>'                    -> popMode ; // close <?...?>
-IGNORE      :   .                       -> more ;
+MORE_PI     :   .                       -> more ;
+
+// ----------------- Handle <! ... > ----------------------
+mode DOC_TYPE_DEF;
+
+DTD         :   '>'                     -> skip, popMode ; // close <!...>
+
+DTD_N_OPEN  :   '<!'                    -> more, pushMode(NEST_DOC_TYPE_DEF) ; // open nested <!...>
+
+DTD_STRING_Q:   '"' ~["]* '"'           -> more ;
+
+DTD_STRING_A:   '\'' ~[']* '\''         -> more ;
+            
+MORE_DTD    :   ~['"<>]                 -> more ;
+
+// ------------- Handle Nested <! ... > -------------------
+mode NEST_DOC_TYPE_DEF;
+
+N_DTD       :   '>'                     -> more, popMode ; // close nested <!...>
+
+N_DTD_N_OPEN:   '<!'                    -> more, pushMode(NEST_DOC_TYPE_DEF) ; // open nested <!...>
+
+N_DTD_STRING_Q: '"' ~["]* '"'           -> more ;
+
+N_DTD_STRING_A: '\'' ~[']* '\''         -> more ;
+            
+N_MORE_DTD  :  ~['"<>]                  -> more ;
+

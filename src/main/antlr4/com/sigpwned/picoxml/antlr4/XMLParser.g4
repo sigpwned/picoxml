@@ -31,15 +31,15 @@ parser grammar XMLParser;
 
 options { tokenVocab=XMLLexer; }
 
-document    :   prolog? misc* (DTD misc*)? element misc* EOF ;
+document    :   prolog? misc* element misc* EOF ;
 
 prolog      :   XMLDeclOpen attribute* SPECIAL_CLOSE ;
 
 content     :   chardata?
                 ((element | reference | CDATA | PI | COMMENT) chardata?)* ;
 
-element     :   '<' Name attribute* '>' content '<' '/' Name '>'
-            |   '<' Name attribute* '/>'
+element     :   OPEN Name attribute* CLOSE content OPEN SLASH Name CLOSE
+            |   OPEN Name attribute* SLASH_CLOSE
             ;
 
 reference   :   EntityRef | CharRef ;
