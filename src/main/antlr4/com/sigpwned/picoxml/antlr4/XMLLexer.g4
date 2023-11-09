@@ -35,7 +35,7 @@ CDATA       :   '<![CDATA[' .*? ']]>' ;
 /** Scarf all DTD stuff, Entity Declarations like <!ENTITY ...>,
  *  and Notation Declarations <!NOTATION ...>
  */
-DTD         :   '<!' .*? '>'            -> skip ;
+DTD         :   '<!' .*? '>' ;
 EntityRef   :   '&' Name ';' ;
 CharRef     :   '&#' DIGIT+ ';'
             |   '&#x' HEXDIGIT+ ';'

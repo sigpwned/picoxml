@@ -50,7 +50,7 @@ public class TreeXmlReaderTest {
     XMLLexer lexer = new XMLLexer(s);
     TokenStream tokens = new CommonTokenStream(lexer);
     XMLParser parser = new XMLParser(tokens);
-    TreeXmlReader p = new TreeXmlReader(parser);
+    XmlReader p = new XmlReader(parser);
 
     Document doc = p.document();
 
@@ -65,7 +65,7 @@ public class TreeXmlReaderTest {
     XMLLexer lexer = new XMLLexer(s);
     TokenStream tokens = new CommonTokenStream(lexer);
     XMLParser parser = new XMLParser(tokens);
-    TreeXmlReader p = new TreeXmlReader(parser);
+    XmlReader p = new XmlReader(parser);
 
     Document doc = p.document();
 

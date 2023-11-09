@@ -35,6 +35,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import com.sigpwned.picoxml.exception.InvalidSyntaxXmlException;
 
 public final class XmlStrings {
   private XmlStrings() {}
@@ -94,6 +95,10 @@ public final class XmlStrings {
       buf.append(s, start, amp);
 
       final int semi = s.indexOf(";", amp + 1);
+      if (semi == -1) {
+        // TODO Line and column
+        throw new InvalidSyntaxXmlException(0, 0);
+      }
       final String entityName = s.substring(amp + 1, semi);
       final Optional<String> maybeEntityValue =
           StandardEntities.findStandardEntityValue(entityName);

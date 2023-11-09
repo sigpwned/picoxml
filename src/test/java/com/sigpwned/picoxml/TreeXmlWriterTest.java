@@ -51,13 +51,13 @@ public class TreeXmlWriterTest {
     XMLLexer lexer = new XMLLexer(s);
     TokenStream tokens = new CommonTokenStream(lexer);
     XMLParser parser = new XMLParser(tokens);
-    TreeXmlReader p = new TreeXmlReader(parser);
+    XmlReader p = new XmlReader(parser);
 
     Document doc = p.document();
 
     StringWriter w = new StringWriter();
     try {
-      new TreeXmlWriter(w).document(doc);
+      new XmlWriter(w).document(doc);
     } finally {
       w.close();
     }
@@ -79,13 +79,13 @@ public class TreeXmlWriterTest {
     XMLLexer lexer = new XMLLexer(s);
     TokenStream tokens = new CommonTokenStream(lexer);
     XMLParser parser = new XMLParser(tokens);
-    TreeXmlReader p = new TreeXmlReader(parser);
+    XmlReader p = new XmlReader(parser);
 
     Document doc = p.document();
 
     StringWriter w = new StringWriter();
     try {
-      new TreeXmlWriter(w).document(doc);
+      new XmlWriter(w).document(doc);
     } finally {
       w.close();
     }
